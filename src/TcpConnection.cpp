@@ -205,29 +205,74 @@ void TcpConnection::handleWrite()
 {
     if (channel_->isWriting())
     {
-        int savedErrno = 0;
-        ssize_t n = outputBuffer_.writeFd(channel_->fd(), &savedErrno);
-        if (n > 0)
+        // 首先检查是否有文件需要发送
+        if (fileRemaining_ > 0)
         {
-            outputBuffer_.retrieve(n);//从缓冲区读取reable区域的数据移动readindex下标
-            if (outputBuffer_.readableBytes() == 0)
+            ssize_t bytesSent = sendfile(socket_->fd(), fileDescriptor_, &fileOffset_, fileRemaining_);
+            if (bytesSent >= 0)
             {
-                channel_->disableWriting();
-                if (writeCompleteCallback_)
+                fileRemaining_ -= bytesSent;
+                if (fileRemaining_ == 0)
                 {
-                    // TcpConnection对象在其所在的subloop中 向pendingFunctors_中加入回调
-                    loop_->queueInLoop(
-                        std::bind(writeCompleteCallback_, shared_from_this()));
+                    // 文件发送完成
+                    channel_->disableWriting();
+                    if (writeCompleteCallback_)
+                    {
+                        loop_->queueInLoop(
+                            std::bind(writeCompleteCallback_, shared_from_this()));
+                    }
+                    if (state_ == kDisconnecting)
+                    {
+                        shutdownInLoop();
+                    }
                 }
-                if (state_ == kDisconnecting)
+            }
+            else
+            {
+                if (errno != EWOULDBLOCK && errno != EAGAIN)
                 {
-                    shutdownInLoop(); // 在当前所属的loop中把TcpConnection删除掉
+                    LOG_ERROR("TcpConnection::handleWrite sendfile error");
+                    if (errno == EPIPE || errno == ECONNRESET)
+                    {
+                        handleError();
+                    }
                 }
             }
         }
         else
         {
-            LOG_ERROR("TcpConnection::handleWrite");
+            // 处理普通缓冲区数据
+            int savedErrno = 0;
+            ssize_t n = outputBuffer_.writeFd(channel_->fd(), &savedErrno);
+            if (n > 0)
+            {
+                outputBuffer_.retrieve(n);//从缓冲区读取reable区域的数据移动readindex下标
+                if (outputBuffer_.readableBytes() == 0)
+                {
+                    channel_->disableWriting();
+                    if (writeCompleteCallback_)
+                    {
+                        // TcpConnection对象在其所在的subloop中 向pendingFunctors_中加入回调
+                        loop_->queueInLoop(
+                            std::bind(writeCompleteCallback_, shared_from_this()));
+                    }
+                    if (state_ == kDisconnecting)
+                    {
+                        shutdownInLoop(); // 在当前所属的loop中把TcpConnection删除掉
+                    }
+                }
+            }
+            else
+            {
+                if (errno != EWOULDBLOCK && errno != EAGAIN)
+                {
+                    LOG_ERROR("TcpConnection::handleWrite");
+                    if (errno == EPIPE || errno == ECONNRESET)
+                    {
+                        handleError();
+                    }
+                }
+            }
         }
     }
     else
@@ -298,18 +343,24 @@ void TcpConnection::sendFileInLoop(int fileDescriptor, off_t offset, size_t coun
                 loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
             }
         } else { // bytesSent < 0
-            if (errno != EWOULDBLOCK) { // 如果是非阻塞没有数据返回错误这个是正常显现等同于EAGAIN，否则就异常情况
+            if (errno != EWOULDBLOCK && errno != EAGAIN) { // 如果是非阻塞没有数据返回错误这个是正常显现等同于EAGAIN，否则就异常情况
                 LOG_ERROR("TcpConnection::sendFileInLoop");
-            }
-            if (errno == EPIPE || errno == ECONNRESET) {
-                faultError = true;
+                if (errno == EPIPE || errno == ECONNRESET) {
+                    faultError = true;
+                }
             }
         }
     }
     // 处理剩余数据
     if (!faultError && remaining > 0) {
-        // 继续发送剩余数据
-        loop_->queueInLoop(
-            std::bind(&TcpConnection::sendFileInLoop, shared_from_this(), fileDescriptor, offset, remaining));
+        // 注册写事件，等待下一次可写时继续发送
+        channel_->enableWriting();
+        // 保存文件发送状态，以便下次继续发送
+        fileDescriptor_ = fileDescriptor;
+        fileOffset_ = offset;
+        fileRemaining_ = remaining;
+    } else if (faultError) {
+        // 处理错误情况
+        handleError();
     }
 }

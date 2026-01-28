@@ -100,4 +100,9 @@ private:
     // 数据缓冲区
     Buffer inputBuffer_;    // 接收数据的缓冲区
     Buffer outputBuffer_;   // 发送数据的缓冲区 用户send向outputBuffer_发
+    
+    // 文件发送相关
+    int fileDescriptor_;    // 待发送的文件描述符
+    off_t fileOffset_;      // 文件发送偏移量
+    size_t fileRemaining_;  // 剩余发送字节数
 };
