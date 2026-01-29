@@ -18,7 +18,7 @@ Muduo-Core 是一个基于 C++11 实现的高性能网络库，采用主从 Reac
 
 项目采用主从 Reactor 多线程模型，具体架构如下：
 
-![Reactor Architecture](./images/reactor.png)
+![Reactor Architecture](images/Reactor.png)
 
 ### 核心组件
 
@@ -199,13 +199,13 @@ make
 
 使用 Muduo-Core 构建的实时聊天服务器，支持 thousands 级并发连接，消息延迟低于 1ms，能够满足实时聊天的需求。
 
-### 案例二：物联网数据采集系统
-
-基于 Muduo-Core 开发的物联网数据采集系统，能够同时处理 thousands 个设备的连接，实时接收和处理设备上传的数据。
-
-### 案例三：高性能 API 服务器
+### 案例二：高性能 API 服务器
 
 使用 Muduo-Core 构建的 API 服务器，支持 millions 级 QPS，响应时间低于 5ms，为移动应用和 Web 应用提供稳定的 API 服务。
+
+### 案例三：基于raft原理的分布式KV存储系统
+
+使用 Muduo-Core 作为分布式系统底层网络基础，实现自研RPC框架，为分布式系统提供高可用、高并发网络支持。
 
 ## 未来规划
 
@@ -225,14 +225,6 @@ make
 2. **文档贡献**：完善文档、添加使用示例
 3. **测试贡献**：增加测试用例、提高测试覆盖率
 4. **问题反馈**：报告 bug、提出新功能建议
-
-### 贡献流程
-
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
 
 ## 参考资料
 
@@ -254,7 +246,7 @@ make
 
 暂无
 
----
-
 **项目地址**：[https://github.com/wenjin0701/wb-muduo-core](https://github.com/wenjin0701/wb-muduo-core)
+
+
 **最后更新**：2026-01-29
