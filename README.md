@@ -18,42 +18,27 @@ Muduo-Core 是一个基于 C++11 实现的高性能网络库，采用主从 Reac
 
 项目采用主从 Reactor 多线程模型，具体架构如下：
 
+![Reactor](Reactor.png)
 ```
-┌────────────────────────────────────────────────────────────┐
-│                          MainReactor                       │
-│                  (主线程，负责接受新连接)                  │
-├────────────────────────────────────────────────────────────┤
-│                         Acceptor                           │
-│                (接受器，处理新连接请求)                    │
-├────────────────────────────────────────────────────────────┤
-│                          轮询算法                          │
-│             (将新连接均匀分配给 SubReactor)                │
-├────────────────────────────────────────────────────────────┤
-│  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  │
-│  │ SubReactor│  │ SubReactor│  │ SubReactor│  │ SubReactor│  │
-│  │   (线程1)  │  │   (线程2)  │  │   (线程3)  │  │   (线程4)  │  │
-│  └───────────┘  └───────────┘  └───────────┘  └───────────┘  │
-│          (工作线程，负责处理连接的读写事件)                  │
-└────────────────────────────────────────────────────────────┘
-```
+
 
 ### 核心组件
 
-| 组件 | 职责 | 文件位置 |
+| 组件 | 作用 | 
 |------|------|----------|
-| EventLoop | 事件循环，管理 Channel | include/EventLoop.h, src/EventLoop.cpp |
-| Channel | 事件通道，封装文件描述符和事件 | include/Channel.h, src/Channel.cpp |
-| Poller | 事件分发器抽象基类 | include/Poller.h, src/Poller.cpp |
-| EPollPoller | 基于 epoll 的事件分发器 | include/EPollPoller.h, src/EPollPoller.cpp |
-| Buffer | 网络缓冲区，处理读写数据 | include/Buffer.h, src/Buffer.cpp |
-| Acceptor | 接受器，处理新连接 | include/Acceptor.h, src/Acceptor.cpp |
-| TcpServer | 服务器类，管理连接 | include/TcpServer.h, src/TcpServer.cpp |
-| TcpConnection | 连接类，处理单个连接 | include/TcpConnection.h, src/TcpConnection.cpp |
-| EventLoopThreadPool | 事件循环线程池 | include/EventLoopThreadPool.h, src/EventLoopThreadPool.cpp |
-| InetAddress | 网络地址封装 | include/InetAddress.h, src/InetAddress.cpp |
-| Socket | 套接字封装 | include/Socket.h, src/Socket.cpp |
-| Logger | 日志系统 | include/Logger.h, src/Logger.cpp |
-| Thread | 线程封装 | include/Thread.h, src/Thread.cpp |
+| EventLoop           | 事件循环，管理 Channel          |
+| Channel             | 事件通道，封装文件描述符和事件   |
+| Poller              | 事件分发器抽象基类              |
+| EPollPoller         | 基于 epoll 的事件分发器         |
+| Buffer              | 网络缓冲区，处理读写数据         |
+| Acceptor            | 接受器，处理新连接              |
+| TcpServer           | 服务器类，管理连接              |
+| TcpConnection       | 连接类，处理单个连接            |
+| EventLoopThreadPool | 事件循环线程池                  |
+| InetAddress         | 网络地址封装                    |
+| Socket              | 套接字封装                      |
+| Logger              | 日志系统                        |
+| Thread              | 线程封装                        |
 
 ## 核心功能
 
@@ -231,4 +216,4 @@ make
 ---
 
 **项目地址**：[https://github.com/wenjin0701/wb-muduo-core](https://github.com/wenjin0701/wb-muduo-core)
-**最后更新**：2024-01-28
+**最后更新**：2026-01-29
